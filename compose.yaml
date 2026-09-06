@@ -1,0 +1,92 @@
+name: hostingservice
+
+x-defaults: &defaults
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  website:
+    <<: *defaults
+    image: caddy:2.11.4-alpine
+    profiles: [website]
+    ports:
+      - "${WEB_BIND:-0.0.0.0}:${HTTP_PORT:-80}:80"
+      - "${WEB_BIND:-0.0.0.0}:${HTTPS_PORT:-443}:443/tcp"
+    volumes:
+      - ./runtime/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./website:/srv:ro
+      - ./data/caddy/data:/data
+      - ./data/caddy/config:/config
+
+  gitea:
+    <<: *defaults
+    image: docker.gitea.com/gitea:1.27.3
+    profiles: [gitea]
+    environment:
+      USER_UID: "1000"
+      USER_GID: "1000"
+      GITEA__database__DB_TYPE: sqlite3
+      GITEA__server__DOMAIN: "${SERVER_HOST:-localhost}"
+      GITEA__server__ROOT_URL: "${GITEA_ROOT_URL:-http://localhost:3000/}"
+      GITEA__server__SSH_DOMAIN: "${SERVER_HOST:-localhost}"
+      GITEA__server__SSH_PORT: "${GITEA_SSH_PORT:-2222}"
+      GITEA__service__DISABLE_REGISTRATION: "true"
+      GITEA__security__INSTALL_LOCK: "true"
+    ports:
+      - "${ADMIN_BIND:-127.0.0.1}:3000:3000"
+      - "${GITEA_SSH_PORT:-2222}:22"
+    volumes:
+      - ./data/gitea:/data
+
+  teamspeak:
+    <<: *defaults
+    image: teamspeak:3.13.8
+    profiles: [teamspeak]
+    environment:
+      TS3SERVER_LICENSE: "${TS3SERVER_LICENSE:-view}"
+    ports:
+      - "9987:9987/udp"
+      - "30033:30033/tcp"
+      - "127.0.0.1:10011:10011/tcp"
+    volumes:
+      - ./data/teamspeak:/var/ts3server
+
+  mihomo:
+    <<: *defaults
+    image: metacubex/mihomo:v1.19.30
+    profiles: [china]
+    ports:
+      - "127.0.0.1:7890:7890"
+    volumes:
+      - ./runtime/mihomo.yaml:/root/.config/mihomo/config.yaml:ro
+      - ./data/mihomo/providers:/root/.config/mihomo/providers
+
+  hysteria:
+    <<: *defaults
+    image: tobyxdd/hysteria:v2.12.2
+    profiles: [overseas]
+    command: [server, -c, /etc/hysteria/config.json]
+    ports:
+      - "${HYSTERIA_PORT:-8443}:8443/udp"
+    volumes:
+      - ./runtime/hysteria:/etc/hysteria:ro
+
+  uptime-kuma:
+    <<: *defaults
+    image: louislam/uptime-kuma:2.5.3
+    profiles: [uptime-kuma]
+    ports:
+      - "${ADMIN_BIND:-127.0.0.1}:3001:3001"
+    volumes:
+      - ./data/uptime-kuma:/app/data
+
+  it-tools:
+    <<: *defaults
+    image: corentinth/it-tools:2024.10.22-7ca5933
+    profiles: [it-tools]
+    ports:
+      - "${ADMIN_BIND:-127.0.0.1}:8080:80"
