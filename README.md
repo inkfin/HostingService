@@ -2,10 +2,42 @@
 
 在自己的 Linux VPS 上按需启动个人服务。使用 Docker Compose，配置和数据留在各台服务器上，GitHub 只保存部署方式。
 
+## 白板 VPS 一键配置
+
+支持 **Debian 12/13、Ubuntu 22.04/24.04，amd64/arm64，systemd**。SSH 登录 VPS 后复制整段运行；普通用户需要 sudo 权限，root 可直接运行。无需安装 agent、Node.js 或 GitHub 登录。
+
+```bash
+bash <<'BOOTSTRAP'
+set -e
+SUDO=()
+if [ "$(id -u)" -ne 0 ]; then SUDO=(sudo); fi
+"${SUDO[@]}" apt-get update
+"${SUDO[@]}" apt-get install -y ca-certificates curl
+installer=$(mktemp)
+trap 'rm -f "$installer"' EXIT
+curl -fsSL https://raw.githubusercontent.com/inkfin/HostingService/main/install.sh -o "$installer"
+"${SUDO[@]}" bash "$installer"
+BOOTSTRAP
+```
+
+命令会以 root 安装依赖和 Docker 官方软件源，下载公开仓库到 `/opt/HostingService`，进入中文终端向导。首次下载使用 `main`，安装后显示实际 commit；已有部署只继续配置，不自动拉取更新。运行前可先[阅读安装脚本](install.sh)。VPS 必须能够访问 GitHub、Docker 软件源及容器镜像。
+
+向导依次处理服务选择、域名、账号、对象存储、备份通知、首次完整备份和 systemd 定时任务。请准备公网地址、可选域名、S3 bucket/密钥和接收通知的 HTTPS webhook。密码隐藏输入，不上传 GitHub。浏览器登录、云安全组、客户端连接和隔离恢复验收仍需按提示操作；只有确认完成这些步骤才报告配置完成。提示出现在 SSH 终端，不需要图形界面。
+
+中断后继续：
+
+```bash
+cd /opt/HostingService && sudo ./hosting setup
+```
+
+迁移旧服务器时，先按[迁移说明](docs/storage-and-migration.md)恢复配置和数据，再运行向导；不要在空目录初始化新服务替代旧数据。向导保留已有配置和密码，每次重新检查服务及备份；不会自动覆盖或修复损坏的配置。
+
+## 可选：让 agent 协助部署
+
 希望 agent 带着完成配置与验收，可安装本仓库的部署 skill：
 
 ```bash
-npx skills add git@github.com:inkfin/HostingService.git --skill hostingservice-deploy --agent codex --global
+npx skills add https://github.com/inkfin/HostingService.git --skill hostingservice-deploy --agent codex --global
 ```
 
 然后向 agent 说明目标 SSH 主机并要求使用 `hostingservice-deploy`。安装本身不启动服务；agent 会引导域名、账号、存储凭据、备份与定时任务，并验证实际使用和恢复。详见[部署 walkthrough](docs/deployment.md)、[开发与验收标准](docs/development.md)。
@@ -30,10 +62,10 @@ npx skills add git@github.com:inkfin/HostingService.git --skill hostingservice-d
 
 多数服务适用于 amd64 / arm64；TeamSpeak 官方镜像只有 amd64。VPS 必须允许运行容器，并提供所用端口的入站连通性。NAT VPS 需要对应端口映射。国内机器还需要能够下载 GitHub 仓库及容器镜像，Mihomo 不能解决首次拉取自身镜像的问题。
 
-私有仓库在 VPS 上需要 GitHub SSH Key 或已登录的 `gh`。使用只读 deploy key 即可拉取：
+也可以在已安装依赖的服务器上手动克隆公开仓库：
 
 ```bash
-git clone git@github.com:inkfin/HostingService.git
+git clone https://github.com/inkfin/HostingService.git
 cd HostingService
 ./hosting init && ./hosting up
 ```

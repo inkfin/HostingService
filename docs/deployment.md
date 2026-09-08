@@ -2,14 +2,14 @@
 
 ## 安装 skill
 
-在运行 agent 的电脑上准备 Node.js/npm 及 GitHub 私有仓库访问权限：
+在运行 agent 的电脑上准备 Node.js/npm：
 
 ```bash
-npx skills add git@github.com:inkfin/HostingService.git \
+npx skills add https://github.com/inkfin/HostingService.git \
   --skill hostingservice-deploy --agent codex --global
 ```
 
-也可以替换 `--agent codex` 为 Skills CLI 支持的其他 agent。仓库保持私有，安装会复用 Git/SSH 认证；SSH 密钥或 1Password 解锁失败时先修复认证。不要把 GitHub token 写到命令参数中。部分 agent 需要刷新或重新开启会话才能发现新 skill。
+也可以替换 `--agent codex` 为 Skills CLI 支持的其他 agent。仓库公开，下载无需 GitHub 凭据。部分 agent 需要刷新或重新开启会话才能发现新 skill。
 
 安装后给 agent 一个明确请求：
 
@@ -30,3 +30,7 @@ npx skills add git@github.com:inkfin/HostingService.git \
 默认建议每天备份；最大可丢失时间约为距离最近一次成功备份的间隔，不保证零数据丢失。时间和时区均可调整。网站 DNS 和云安全组的修改以用户选定厂商的实际工具能力为准。
 
 参考：[Skills CLI 安装格式与私有仓库](https://github.com/vercel-labs/skills)、[OpenAI skills](https://developers.openai.com/codex/skills/)。
+
+## 无 agent 部署
+
+白板 VPS 使用 [README 一键命令](../README.md#白板-vps-一键配置)。`install.sh` 安装系统依赖，`./hosting setup` 负责可重复运行的配置向导。已有 agent 也可以调用这些入口，并协助完成外网访问和实际恢复验收。

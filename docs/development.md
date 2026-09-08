@@ -51,3 +51,11 @@ CI 配置测试与 E2E 分开；出现网络阻塞时报告未完成，不能把
 - 系统级定时器针对 rootful Docker + systemd。rootless / OpenRC 需另行适配。
 - 机内告警无法覆盖整台 VPS 掉线，需要用户独立外部监控；通知失败会在 journal 中留下错误。
 - GUI 提示依赖 agent 宿主能力，skill 自身不是 GUI 应用。
+
+## 白板安装与可续跑向导
+
+`install.sh` 支持 Debian 12/13、Ubuntu 22.04/24.04 的 amd64/arm64 systemd 主机。使用发行版 apt 安装基础依赖、Docker 官方 apt 源安装 Engine/Compose；存在冲突包时停止，不自动卸载。既有 Docker 必须通过 daemon 和 Compose 检查。安装路径固定 `/opt/HostingService`，临时克隆成功后才移动到目标目录。既有 checkout 不自动更新或重置。
+
+`./hosting setup` 调用现有 init、check、up、管理员创建、对象存储、backup、remote check 和 schedule 命令。配置文件决定续跑位置，每次重查运行状态；人工验收必须重新确认。Ctrl-C/EOF/命令失败返回非零，不报告完成。密钥沿用隐藏输入和 0600 文件，初始化不会覆盖旧值。setup-report 明确区分程序检查和人工确认；不把用户确认伪装为自动恢复测试。
+
+安装器不会获取云账号、自动购买存储、改变防火墙或恢复覆盖数据。迁移先按现有手册恢复，再续跑向导。当前恢复演练由向导引导人工执行；不能将首次备份、restic read-data 校验或 CI 的合成 Gitea 测试视为用户真实数据已完成恢复演练。

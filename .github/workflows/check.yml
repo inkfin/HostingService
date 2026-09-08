@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: bash -n hosting
+      - run: bash -n hosting install.sh
       - run: sudo apt-get update && sudo apt-get install -y restic
       - run: python3 -m unittest discover -s tests -v
       - run: python3 scripts/scheduler.py render > /tmp/hostingservice-units.json

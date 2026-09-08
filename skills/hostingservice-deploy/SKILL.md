@@ -11,7 +11,7 @@ description: Deploy or migrate the user's HostingService Docker stack on a Linux
 
 安装 skill 只提供操作说明，不代表服务已安装。先确认目标 SSH host、部署目录和新装/已有/迁移状态；不把当前电脑当作目标 VPS。用当前环境已有的 SSH/remote 工具，检查 Linux、CPU、磁盘、现有容器、占用端口、Docker/Compose/Python/OpenSSL/Git/restic/systemd。
 
-从 `git@github.com:inkfin/HostingService.git` 克隆部署仓库。私有仓库需要用户已有 GitHub 权限或只读 deploy key；不能为了方便下载而改为公开。已有 checkout 先检查改动和版本，不覆盖 `.env`、`runtime/`、`data/`，不运行清库命令。安装后的 skill 目录可能独立于源码，不能用 `../../` 猜测部署代码位置。
+从 `https://github.com/inkfin/HostingService.git` 克隆部署仓库。仓库已按用户要求公开，下载无需认证。白板受支持 VPS 可先运行 README 的 install.sh，再用 ./hosting setup 配置；不必在服务器安装 agent。已有 checkout 先检查改动和版本，不覆盖 `.env`、`runtime/`、`data/`，不运行清库命令。安装后的 skill 目录可能独立于源码，不能用 `../../` 猜测部署代码位置。
 
 读取 checkout 的 `docs/deployment.md`、`docs/operations.md`；备份设置再读 `docs/object-storage.md`，迁移再读 `docs/storage-and-migration.md`。本 skill 的 [配置清单](references/configuration.md) 和 [验收标准](references/acceptance.md) 可用于未克隆成功时说明缺项；执行命令以实际 checkout 的 `./hosting --help` 为准。
 
