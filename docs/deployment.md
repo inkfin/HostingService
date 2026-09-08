@@ -4,7 +4,7 @@
 
 白板机需要先具备 SSH 管理入口、可用网络和系统依赖。若选择在 VPS 运行 agent，还需要安装该 agent 并完成模型登录/API 认证；若电脑上的 agent 已能 SSH 操作 VPS，这些模型配置只留在电脑上。模型凭据、SSH 密钥和备份凭据用途不同，不应混在部署仓库里。
 
-当前 `install.sh` 默认安装 Docker 等系统依赖、Homebrew 和 OpenCode，不安装 Codex。Homebrew/OpenCode 在选定普通用户下运行，登录通过 `opencode auth login` 完成；API 密钥/OAuth 留在该用户 home，安装器不读取或打印。已有模型配置可以跳过登录；安装成功不代表模型调用成功，需实际验证。`--manual` 保留无 agent 的人类配置向导。
+当前 `install.sh` 默认安装 Docker 等系统依赖、Homebrew 和 OpenCode，不安装 Codex。Homebrew/OpenCode 在选定普通用户下运行，登录通过 `opencode auth login` 完成；API 密钥/OAuth 留在该用户 home，安装器不读取或打印。已有模型配置可以跳过登录；安装成功不代表模型调用成功，需实际验证。安装器遇到需要用户提供的账号/凭据时等待输入，环境准备好后交给 agent；不区分 manual/agent 安装模式。
 
 安装器不自动建立出站代理或修改防火墙，需要 GitHub、Homebrew、Docker 和模型端点可达。`./hosting init` 仅生成业务服务配置；代理自身尚未安装时无法解决首次下载问题。普通用户运维需要 sudo；脚本不会配置 NOPASSWD、复制 root 的 SSH 密钥或改动已有容器数据所有权。
 
@@ -53,9 +53,11 @@ npx skills add https://github.com/inkfin/HostingService.git \
 
 参考：[Skills CLI 安装格式](https://github.com/vercel-labs/skills)、[OpenAI skills](https://developers.openai.com/codex/skills/)。
 
-## 无 agent 部署
+## 交互式安装与 agent 交接
 
-白板 VPS 使用 [README 一键命令](../README.md#白板-vps-一键配置)。在下载命令中传入 `--manual`，安装器跳过 Homebrew/OpenCode，改由 `./hosting setup` 提供配置向导。已有 agent 也可以调用这些入口，并协助完成外网访问和实际恢复验收。
+白板 VPS 使用 [README 一键命令](../README.md#白板-vps-一键配置)。脚本自动准备系统和 agent 依赖，在用户选择、密码和模型认证步骤等待输入，随后打开 OpenCode。服务部署、维护和升级由 agent 读取 skill 后执行；业务凭据仍通过保密输入补齐，不能在聊天中索要 token。
+
+`./hosting setup` 保留为独立的服务配置辅助工具，不是安装器的另一个模式。已有 agent 可直接调用 `./hosting` 子命令，不需要自动回答这套人类向导。
 
 ## AGENTS.md 与日常运维
 

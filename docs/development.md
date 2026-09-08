@@ -60,4 +60,4 @@ CI 配置测试与 E2E 分开；出现网络阻塞时报告未完成，不能把
 
 安装器不会获取云账号、自动购买存储、改变防火墙或恢复覆盖数据。迁移先按现有手册恢复，再续跑向导。当前恢复演练由向导引导人工执行；不能将首次备份、restic read-data 校验或 CI 的合成 Gitea 测试视为用户真实数据已完成恢复演练。
 
-默认 bootstrap 在依赖阶段后调用 `scripts/agent-bootstrap.sh`，为普通用户安装 Homebrew/OpenCode、引导模型登录并打开仓库。`scripts/agent_checkout.py` 只移交公开代码和 Git 元数据，遇到被跟踪的私密路径直接失败，保留容器数据 UID。`--manual` 继续调用原 setup。重跑不会自动升级 brew formula、重新生成模型密钥或重置服务。模型提供商可用性需目标机实际验证，不通过合成测试推断。
+默认 bootstrap 在依赖阶段后调用 `scripts/agent-bootstrap.sh`，为普通用户安装 Homebrew/OpenCode、引导模型登录并打开仓库。`scripts/agent_checkout.py` 只移交公开代码和 Git 元数据，遇到被跟踪的私密路径直接失败，保留容器数据 UID。安装器只有一条交互式环境准备路径；原 setup 保留为独立服务配置工具。重跑不会自动升级 brew formula、重新生成模型密钥或重置服务。模型提供商可用性需目标机实际验证，不通过合成测试推断。

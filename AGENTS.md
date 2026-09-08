@@ -6,7 +6,7 @@
 
 - 部署、增删服务、升级、备份、故障排查和迁移，读取 `skills/hostingservice-deploy/SKILL.md`，按任务加载其 references。
 - `.agents/skills/hostingservice-deploy` 链接到同一份 skill；只修改 `skills/` 下的源文件，不复制成两套。
-- `install.sh` 默认安装系统依赖、Homebrew 和 OpenCode，引导普通用户完成模型登录并打开仓库；不安装 Codex、不自动拉取已有 checkout 的更新。`--manual` 跳过 agent 并调用 `./hosting setup`。
+- `install.sh` 默认安装系统依赖、Homebrew 和 OpenCode，引导普通用户完成模型登录并打开仓库；不安装 Codex、不自动拉取已有 checkout 的更新。安装器只有一条交互式准备环境并交接 agent 的流程。
 - `./hosting setup` 是人类终端向导。agent 可直接调用 `./hosting` 子命令完成同样工作；不要批量输入 yes 冒充人工访问或恢复验收。
 - `./hosting --help`、实际代码和目标机状态决定命令能力。不存在 `hosting add` / `hosting update`，不要编造这些命令。
 

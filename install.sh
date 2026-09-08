@@ -2,11 +2,10 @@
 # Public bootstrap: system dependencies, Homebrew and OpenCode.
 set -euo pipefail
 if [[ ${1:-} == --help ]]; then
-  echo 'Usage: bash install.sh [--manual|--help] (default: Homebrew + OpenCode; --manual: terminal service setup)'
+  echo 'Usage: bash install.sh [--help] (interactive environment setup, then OpenCode)'
   exit 0
 fi
-mode=${1:-agent}
-[[ $# -le 1 && ( $mode == agent || $mode == --manual ) ]] || { echo 'Unknown argument' >&2; exit 2; }
+[[ $# == 0 ]] || { echo 'Unknown argument' >&2; exit 2; }
 [[ $(uname -s) == Linux ]] || { echo 'Requires Linux VPS' >&2; exit 1; }
 [[ -r /dev/tty ]] || { echo 'Run from an interactive SSH terminal' >&2; exit 1; }
 if [[ $EUID != 0 ]]; then
@@ -69,7 +68,6 @@ fi
 cd "$checkout"
 printf 'Deployment revision: '
 git -c safe.directory="$checkout" rev-parse HEAD
-if [[ $mode == --manual ]]; then exec ./hosting setup; fi
 [[ -f scripts/agent-bootstrap.sh ]] || {
   echo '现有 checkout 版本较旧。请先审阅并快进更新仓库，再重新运行安装命令。' >&2
   exit 1

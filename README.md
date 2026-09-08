@@ -36,11 +36,7 @@ cd /opt/HostingService
 opencode
 ```
 
-想使用原来的中文服务配置向导，在上面下载命令中将 `bash "$installer"` 改为 `bash "$installer" --manual`；它跳过 Homebrew/OpenCode。已有 checkout 可直接运行：
-
-```bash
-cd /opt/HostingService && sudo ./hosting setup
-```
+安装脚本本身就是交互式流程：能自动完成的环境准备直接执行，需要账号、Linux 密码或模型登录时停下来等待输入。准备好环境后，由 OpenCode 按 skill 继续部署服务；后续添加服务、维护和升级也交给 agent。
 
 迁移旧服务器时，先告诉 agent 这是迁移，按[迁移说明](docs/storage-and-migration.md)恢复配置与数据。服务访问、客户端连接和实际备份恢复需要验证后才能报告部署完成。
 
