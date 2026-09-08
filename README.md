@@ -32,13 +32,15 @@ cd /opt/HostingService && sudo ./hosting setup
 
 迁移旧服务器时，先按[迁移说明](docs/storage-and-migration.md)恢复配置和数据，再运行向导；不要在空目录初始化新服务替代旧数据。向导保留已有配置和密码，每次重新检查服务及备份；不会自动覆盖或修复损坏的配置。
 
-## 可选：让 agent 协助部署
+## 可选：让 agent 部署和运维
 
-希望 agent 带着完成配置与验收，可安装本仓库的部署 skill：
+希望 agent 带着完成部署、添加服务、升级和备份排错，可在**运行 agent 的机器上**安装本仓库的 skill：
 
 ```bash
 npx skills add https://github.com/inkfin/HostingService.git --skill hostingservice-deploy --agent codex --global
 ```
+
+仓库自带 `AGENTS.md` 和 `.agents/skills/` 入口。在仓库目录启动 Codex 时，无需重复 npx 安装；电脑上的 agent 也可通过 SSH 运维 VPS。当前一键脚本不安装 agent 或配置模型登录。`--global` 属于执行安装命令的当前用户，不会自动安装到远端服务器。
 
 然后向 agent 说明目标 SSH 主机并要求使用 `hostingservice-deploy`。安装本身不启动服务；agent 会引导域名、账号、存储凭据、备份与定时任务，并验证实际使用和恢复。详见[部署 walkthrough](docs/deployment.md)、[开发与验收标准](docs/development.md)。
 

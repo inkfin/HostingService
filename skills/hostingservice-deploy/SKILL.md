@@ -1,11 +1,15 @@
 ---
 name: hostingservice-deploy
-description: Deploy or migrate the user's HostingService Docker stack on a Linux VPS, guiding missing configuration and verifying services, Gitea recovery, object-storage backups and server timers before handoff. Use for HostingService setup, backup setup, or VPS migration.
+description: Deploy and operate the user's HostingService Docker stack on a Linux VPS. Use for setup, adding or disabling services, upgrades, troubleshooting, backups, recovery or VPS migration; preserve existing configuration and verify affected services.
 ---
 
-# HostingService deployment walkthrough
+# HostingService deployment and operations
 
 完成用户指定 VPS 的部署和验收。用户要求部署已授权范围内的服务后，持续执行可自动完成的配置；不要仅交付命令清单，也不要在每个可逆步骤重复询问许可。保留用户选择的服务、仓库可见性、域名、备份频率和风险取舍。
+
+## 选择流程
+
+新装按下方部署流程；已有部署的添加/停用服务、升级、故障或备份运维读取 [运维流程](references/maintenance.md)，只处理本次变更及必要验证，不强制重跑首次安装问答。迁移另读下方迁移说明和 checkout 的迁移文档。
 
 ## 获取代码与目标
 
@@ -13,7 +17,7 @@ description: Deploy or migrate the user's HostingService Docker stack on a Linux
 
 从 `https://github.com/inkfin/HostingService.git` 克隆部署仓库。仓库已按用户要求公开，下载无需认证。白板受支持 VPS 可先运行 README 的 install.sh，再用 ./hosting setup 配置；不必在服务器安装 agent。已有 checkout 先检查改动和版本，不覆盖 `.env`、`runtime/`、`data/`，不运行清库命令。安装后的 skill 目录可能独立于源码，不能用 `../../` 猜测部署代码位置。
 
-读取 checkout 的 `docs/deployment.md`、`docs/operations.md`；备份设置再读 `docs/object-storage.md`，迁移再读 `docs/storage-and-migration.md`。本 skill 的 [配置清单](references/configuration.md) 和 [验收标准](references/acceptance.md) 可用于未克隆成功时说明缺项；执行命令以实际 checkout 的 `./hosting --help` 为准。
+先读取 checkout 根目录 `AGENTS.md`（通过远端 shell 操作时也要显式读取），再读取 `docs/deployment.md`、`docs/operations.md`；备份设置再读 `docs/object-storage.md`，迁移再读 `docs/storage-and-migration.md`。本 skill 的 [配置清单](references/configuration.md) 和 [验收标准](references/acceptance.md) 可用于未克隆成功时说明缺项；执行命令以实际 checkout 的 `./hosting --help` 为准。
 
 ## 询问与凭据
 

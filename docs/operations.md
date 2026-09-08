@@ -52,3 +52,7 @@ sudo ./hosting backup --remote --keep-stopped
 ## 历史与容量
 
 当前不会自动删除本地归档或云端快照。定期检查 `du -sh backups` 和对象存储用量；备份频率与空间预算在部署时需说明。本版先保证可恢复与错误可见，保留清理须后续明确策略后用 restic forget/prune 实现，不能通过 bucket 生命周期随意删除内部对象。
+
+## 交给 agent 运维
+
+新增/停用服务、升级、回滚和排错统一使用 [hostingservice-deploy 的运维流程](../skills/hostingservice-deploy/references/maintenance.md)。它先读取实际部署和备份状态，保留配置及原定时策略，按变更范围执行验证。安装位置和调用示例见 [agent 部署与运维](deployment.md#agentsmd-与日常运维)。
