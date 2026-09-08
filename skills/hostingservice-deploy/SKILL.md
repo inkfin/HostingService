@@ -15,7 +15,7 @@ description: Deploy and operate the user's HostingService Docker stack on a Linu
 
 安装 skill 只提供操作说明，不代表服务已安装。先确认目标 SSH host、部署目录和新装/已有/迁移状态；不把当前电脑当作目标 VPS。用当前环境已有的 SSH/remote 工具，检查 Linux、CPU、磁盘、现有容器、占用端口、Docker/Compose/Python/OpenSSL/Git/restic/systemd。
 
-从 `https://github.com/inkfin/HostingService.git` 克隆部署仓库。仓库已按用户要求公开，下载无需认证。白板受支持 VPS 可先运行 README 的 install.sh，再用 ./hosting setup 配置；不必在服务器安装 agent。已有 checkout 先检查改动和版本，不覆盖 `.env`、`runtime/`、`data/`，不运行清库命令。安装后的 skill 目录可能独立于源码，不能用 `../../` 猜测部署代码位置。
+从 `https://github.com/inkfin/HostingService.git` 克隆部署仓库。仓库已按用户要求公开，下载无需认证。白板受支持 VPS 默认运行 README 的 install.sh，安装 Homebrew/OpenCode 并引导模型登录；Codex 由用户以后自行安装。已有电脑 agent 经 SSH 接管可使用 install.sh --manual 或直接补依赖，无需额外安装服务器 agent。OpenCode 模型凭据留在普通用户 home，系统操作按需 sudo，不运行 root Homebrew。已有 checkout 先检查改动和版本，不覆盖 `.env`、`runtime/`、`data/`，不运行清库命令。安装后的 skill 目录可能独立于源码，不能用 `../../` 猜测部署代码位置。
 
 先读取 checkout 根目录 `AGENTS.md`（通过远端 shell 操作时也要显式读取），再读取 `docs/deployment.md`、`docs/operations.md`；备份设置再读 `docs/object-storage.md`，迁移再读 `docs/storage-and-migration.md`。本 skill 的 [配置清单](references/configuration.md) 和 [验收标准](references/acceptance.md) 可用于未克隆成功时说明缺项；执行命令以实际 checkout 的 `./hosting --help` 为准。
 

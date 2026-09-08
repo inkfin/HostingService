@@ -4,7 +4,7 @@
 
 ## 白板 VPS 一键配置
 
-支持 **Debian 12/13、Ubuntu 22.04/24.04，amd64/arm64，systemd**。SSH 登录 VPS 后复制整段运行；普通用户需要 sudo 权限，root 可直接运行。无需安装 agent、Node.js 或 GitHub 登录。
+支持 **Debian 12/13、Ubuntu 22.04/24.04，amd64/arm64，systemd**。SSH 登录 VPS 后复制整段运行；普通用户需要 sudo 权限，root 可直接运行。无需预装 agent、Node.js 或 GitHub 登录；默认安装 Homebrew 和 OpenCode，Codex 留给你以后自行安装。
 
 ```bash
 bash <<'BOOTSTRAP'
@@ -20,27 +20,39 @@ curl -fsSL https://raw.githubusercontent.com/inkfin/HostingService/main/install.
 BOOTSTRAP
 ```
 
-命令会以 root 安装依赖和 Docker 官方软件源，下载公开仓库到 `/opt/HostingService`，进入中文终端向导。首次下载使用 `main`，安装后显示实际 commit；已有部署只继续配置，不自动拉取更新。运行前可先[阅读安装脚本](install.sh)。VPS 必须能够访问 GitHub、Docker 软件源及容器镜像。
+命令以 root/sudo 安装 Docker 等系统依赖，下载仓库到 `/opt/HostingService`，再为普通用户安装 Homebrew 和 OpenCode。普通用户默认使用原 sudo 用户；root 登录时默认创建 `hosting`，可在提示中改名。新账号需要设置 Linux 密码用于 sudo，不修改 SSH 登录方式或密钥。
 
-向导依次处理服务选择、域名、账号、对象存储、备份通知、首次完整备份和 systemd 定时任务。请准备公网地址、可选域名、S3 bucket/密钥和接收通知的 HTTPS webhook。密码隐藏输入，不上传 GitHub。浏览器登录、云安全组、客户端连接和隔离恢复验收仍需按提示操作；只有确认完成这些步骤才报告配置完成。提示出现在 SSH 终端，不需要图形界面。
+Homebrew 使用 `/home/linuxbrew/.linuxbrew`，OpenCode 通过官方 `anomalyco/tap/opencode` 安装。随后进入 `opencode auth login`，选择你自己的模型提供商并认证；可跳过以复用已有凭据。最后在仓库目录打开 OpenCode，自动带入部署请求、`AGENTS.md` 和 skill。模型是否可用以实际请求为准；认证和配置缺项由你在终端补齐。
 
-中断后继续：
+模型凭据保存在运行 OpenCode 的普通用户 home 中，不进入 Git 或服务备份。公开代码交给该用户维护；已有 `.env`、`runtime/`、`data/`、`backups/` 的权限和容器 UID 保留，涉及这些路径及系统操作时使用 sudo。不要把 Linux 密码或 API 密钥发送到普通聊天。
+
+首次下载使用 `main` 并显示实际 commit；重复运行不自动更新仓库或升级现有 OpenCode。旧 checkout 缺少 agent 安装脚本时会提示先审阅并更新代码。下载要求 GitHub、Docker 软件源、Homebrew 下载端点和镜像可达，模型调用还需能连接所选提供商；安装器不会自动建立出站代理或修改防火墙。可先[阅读安装脚本](install.sh)。
+
+以后使用同一普通用户进入仓库运行 `opencode` 即可。root 登录时例如：
+
+```bash
+sudo -iu hosting
+cd /opt/HostingService
+opencode
+```
+
+想使用原来的中文服务配置向导，在上面下载命令中将 `bash "$installer"` 改为 `bash "$installer" --manual`；它跳过 Homebrew/OpenCode。已有 checkout 可直接运行：
 
 ```bash
 cd /opt/HostingService && sudo ./hosting setup
 ```
 
-迁移旧服务器时，先按[迁移说明](docs/storage-and-migration.md)恢复配置和数据，再运行向导；不要在空目录初始化新服务替代旧数据。向导保留已有配置和密码，每次重新检查服务及备份；不会自动覆盖或修复损坏的配置。
+迁移旧服务器时，先告诉 agent 这是迁移，按[迁移说明](docs/storage-and-migration.md)恢复配置与数据。服务访问、客户端连接和实际备份恢复需要验证后才能报告部署完成。
 
 ## 可选：让 agent 部署和运维
 
 希望 agent 带着完成部署、添加服务、升级和备份排错，可在**运行 agent 的机器上**安装本仓库的 skill：
 
 ```bash
-npx skills add https://github.com/inkfin/HostingService.git --skill hostingservice-deploy --agent codex --global
+npx skills add https://github.com/inkfin/HostingService.git --skill hostingservice-deploy --agent opencode --global
 ```
 
-仓库自带 `AGENTS.md` 和 `.agents/skills/` 入口。在仓库目录启动 Codex 时，无需重复 npx 安装；电脑上的 agent 也可通过 SSH 运维 VPS。当前一键脚本不安装 agent 或配置模型登录。`--global` 属于执行安装命令的当前用户，不会自动安装到远端服务器。
+仓库自带 `AGENTS.md` 和 `.agents/skills/` 入口。在仓库目录启动 OpenCode（或以后安装的 Codex）时，无需重复 npx 安装；电脑上的 agent 也可通过 SSH 运维 VPS。默认安装器已准备 OpenCode，并引导模型登录。`--global` 属于执行安装命令的当前用户，不会自动安装到远端服务器。
 
 然后向 agent 说明目标 SSH 主机并要求使用 `hostingservice-deploy`。安装本身不启动服务；agent 会引导域名、账号、存储凭据、备份与定时任务，并验证实际使用和恢复。详见[部署 walkthrough](docs/deployment.md)、[开发与验收标准](docs/development.md)。
 

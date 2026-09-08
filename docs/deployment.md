@@ -4,7 +4,9 @@
 
 白板机需要先具备 SSH 管理入口、可用网络和系统依赖。若选择在 VPS 运行 agent，还需要安装该 agent 并完成模型登录/API 认证；若电脑上的 agent 已能 SSH 操作 VPS，这些模型配置只留在电脑上。模型凭据、SSH 密钥和备份凭据用途不同，不应混在部署仓库里。
 
-当前 `install.sh` 安装 Docker 等依赖后进入人类配置向导，**不安装 agent、Node.js 或模型认证，不自动建立出站代理或修改防火墙**。它要求 GitHub、软件源和镜像可达。`./hosting init` 仅生成业务服务配置；代理自身尚未安装时无法解决首次下载问题。不要把执行完安装脚本当成 agent 已经可用。
+当前 `install.sh` 默认安装 Docker 等系统依赖、Homebrew 和 OpenCode，不安装 Codex。Homebrew/OpenCode 在选定普通用户下运行，登录通过 `opencode auth login` 完成；API 密钥/OAuth 留在该用户 home，安装器不读取或打印。已有模型配置可以跳过登录；安装成功不代表模型调用成功，需实际验证。`--manual` 保留无 agent 的人类配置向导。
+
+安装器不自动建立出站代理或修改防火墙，需要 GitHub、Homebrew、Docker 和模型端点可达。`./hosting init` 仅生成业务服务配置；代理自身尚未安装时无法解决首次下载问题。普通用户运维需要 sudo；脚本不会配置 NOPASSWD、复制 root 的 SSH 密钥或改动已有容器数据所有权。
 
 agent 接手后的任务是读取实际状态，调用现有部署命令，完成新增服务、更新、排错和恢复。用户仍需完成无工具权限的云操作、登录、密钥保密输入和许可接受。日常备份由 systemd 定时执行，不依赖 agent 常驻或模型额度。
 
@@ -16,7 +18,7 @@ agent 接手后的任务是读取实际状态，调用现有部署命令，完�
 | --- | --- |
 | 电脑上的 agent 经 SSH 运维 | 在电脑上安装 skill；目标仍是指定 VPS |
 | VPS 本机 agent 运维 | 在运行 agent 的 VPS 用户下安装；sudo/root 的 home 与普通用户不同 |
-| 在仓库目录启动 Codex | checkout 自带 `.agents/skills/hostingservice-deploy` 相对符号链接，指向 `skills/` 的唯一源码；无需 npx |
+| 在仓库目录启动 OpenCode/Codex | checkout 自带 `.agents/skills/hostingservice-deploy` 相对符号链接，指向 `skills/` 的唯一源码；无需 npx |
 
 Codex 支持仓库 `.agents/skills/` 及用户 `~/.agents/skills/` 下的 skill 和符号链接。Skills CLI 的具体目标路径/链接布局可能随版本变化，以安装输出和 `npx skills list --global` 为准。参见 [Codex skill 加载规则](https://developers.openai.com/codex/skills/)、[Skills CLI 安装范围](https://github.com/vercel-labs/skills#installation-scope)。
 
@@ -26,10 +28,10 @@ Codex 支持仓库 `.agents/skills/` 及用户 `~/.agents/skills/` 下的 skill 
 
 ```bash
 npx skills add https://github.com/inkfin/HostingService.git \
-  --skill hostingservice-deploy --agent codex --global
+  --skill hostingservice-deploy --agent opencode --global
 ```
 
-也可以替换 `--agent codex` 为 Skills CLI 支持的其他 agent。仓库公开，下载无需 GitHub 凭据。部分 agent 需要刷新或重新开启会话才能发现新 skill。
+以后安装 Codex 时可用 `--agent codex`，也可选择其他受支持的 agent。仓库公开，下载无需 GitHub 凭据。部分 agent 需要刷新或重新开启会话才能发现新 skill。
 
 安装后给 agent 一个明确请求：
 
@@ -53,9 +55,11 @@ npx skills add https://github.com/inkfin/HostingService.git \
 
 ## 无 agent 部署
 
-白板 VPS 使用 [README 一键命令](../README.md#白板-vps-一键配置)。`install.sh` 安装系统依赖，`./hosting setup` 负责可重复运行的配置向导。已有 agent 也可以调用这些入口，并协助完成外网访问和实际恢复验收。
+白板 VPS 使用 [README 一键命令](../README.md#白板-vps-一键配置)。在下载命令中传入 `--manual`，安装器跳过 Homebrew/OpenCode，改由 `./hosting setup` 提供配置向导。已有 agent 也可以调用这些入口，并协助完成外网访问和实际恢复验收。
 
 ## AGENTS.md 与日常运维
+
+OpenCode 同样读取项目 AGENTS.md 和 `.agents/skills/`，无需再次 `/init` 生成项目说明。参见 [OpenCode 规则](https://opencode.ai/docs/rules/)、[skill 加载规则](https://opencode.ai/docs/skills/)。
 
 仓库根目录 `AGENTS.md` 保存项目入口、配置与数据边界、测试和运维要求，不保存具体服务器地址或密钥。Codex 从项目根目录到当前工作目录加载项目指令；所以在 VPS 上用已安装且登录的 Codex 时，从 `/opt/HostingService` 启动即可。电脑上的 agent 通过 SSH 操作时，skill 要求先显式读取远端 AGENTS.md，远端文件不会自动变成本地全局指令。参见 [AGENTS.md 官方规则](https://developers.openai.com/codex/guides/agents-md/)。
 
@@ -72,3 +76,11 @@ npx skills add https://github.com/inkfin/HostingService.git \
 运维步骤见 [skill 运维流程](../skills/hostingservice-deploy/references/maintenance.md)。它调用现有命令并按需编辑配置，不依赖尚未实现的 `hosting add` 或 `hosting update`。
 
 仓库更新会同步仓库内的 AGENTS.md 和 skill 链接目标。通过 npx 安装到用户目录的 skill 是另一份安装，需要单独刷新；最明确的方式是重新运行上面的定向安装命令，并检查安装结果。更新 skill 不会更新 VPS 代码、拉取容器镜像或自动执行运维。
+
+## Homebrew 与 OpenCode 环境
+
+默认 Homebrew prefix 为 `/home/linuxbrew/.linuxbrew`，通过 [Homebrew 官方安装器](https://docs.brew.sh/Homebrew-on-Linux)安装；OpenCode 使用[官方 tap](https://opencode.ai/docs/#install) `brew install anomalyco/tap/opencode`。重复运行保留已安装版本，prefix 属于其他用户时停止并提示选择原所有者，不接管他人的 Homebrew。
+
+脚本为该用户的 `.profile`、`.bashrc` 追加一次 brew shellenv；其他 shell 可手动加载 brew 环境。原 sudo 用户是默认运行用户；仅 root 时默认 hosting，创建后使用标准 sudo 组和 Linux 密码。已有免密 sudo 账号沿用原策略，不强制设置密码。脚本只移交 Git 跟踪的公开代码与 Git 元数据，不递归 chown 容器数据。
+
+模型选择通过 OpenCode 的 `/models`；登录可在 `/connect` 或 `opencode auth login` 完成。默认认证文件为 `~/.local/share/opencode/auth.json`，以该用户实际 XDG 配置为准，不纳入项目备份。迁移后重新登录或按提供商支持方式安全恢复凭据，不能将服务数据迁移当作模型认证已迁移。Homebrew/OpenCode 安装及模型调用仍依赖目标机资源、网络和账户可用性。

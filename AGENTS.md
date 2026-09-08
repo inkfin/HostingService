@@ -6,13 +6,13 @@
 
 - 部署、增删服务、升级、备份、故障排查和迁移，读取 `skills/hostingservice-deploy/SKILL.md`，按任务加载其 references。
 - `.agents/skills/hostingservice-deploy` 链接到同一份 skill；只修改 `skills/` 下的源文件，不复制成两套。
-- `install.sh` 安装依赖并调用 `./hosting setup`；它不安装 agent、不配置模型认证、不自动拉取已有 checkout 的更新。
+- `install.sh` 默认安装系统依赖、Homebrew 和 OpenCode，引导普通用户完成模型登录并打开仓库；不安装 Codex、不自动拉取已有 checkout 的更新。`--manual` 跳过 agent 并调用 `./hosting setup`。
 - `./hosting setup` 是人类终端向导。agent 可直接调用 `./hosting` 子命令完成同样工作；不要批量输入 yes 冒充人工访问或恢复验收。
 - `./hosting --help`、实际代码和目标机状态决定命令能力。不存在 `hosting add` / `hosting update`，不要编造这些命令。
 
 ## 数据和变更
 
-`.env`、`runtime/`、`data/`、`backups/` 只留在目标机，已被 Git 忽略。不要输出密钥、订阅或 webhook token，也不要把 agent 登录凭据复制进项目。公开的 `website/`、文档和例子不可包含私密数据。
+`.env`、`runtime/`、`data/`、`backups/` 只留在目标机，已被 Git 忽略。不要输出密钥、订阅或 webhook token，也不要把 agent 登录凭据复制进项目。OpenCode 模型凭据属于运行它的普通用户 home，不纳入服务备份；不要以 root 启动 Homebrew/OpenCode。公开的 `website/`、文档和例子不可包含私密数据。
 
 保留已有密码、证书、配置和持久化数据。新增 profile 要合并现有选择；停用 profile 前先停止对应容器。不能用 `init` 重置部署，不能用 `down -v`、清库或 `git reset --hard` 修复问题。
 
@@ -25,7 +25,7 @@
 ## 验证与交付
 
 - Python/备份逻辑变更：`python3 -m unittest discover -s tests -v`；restic 集成和 Linux systemd 验证需要相应环境。
-- Shell 变更：`bash -n hosting install.sh`。
+- Shell 变更：`bash -n hosting install.sh scripts/agent-bootstrap.sh`。
 - Gitea 备份/恢复逻辑变更：在隔离 Linux Docker 环境运行 `tests/gitea_e2e.py`，不连接生产数据。
 - skill/文档变更：检查相对链接、skill frontmatter 和 CLI 发现结果；不必重跑与修改无关的部署测试。
 - 服务验收检查实际入口和业务操作。报告区分自动检测、人工确认、合成测试、生产恢复演练；容器 running 不代表完成。
