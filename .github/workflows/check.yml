@@ -13,4 +13,17 @@ jobs:
         with:
           python-version: '3.12'
       - run: bash -n hosting
+      - run: sudo apt-get update && sudo apt-get install -y restic
       - run: python3 -m unittest discover -s tests -v
+      - run: python3 scripts/scheduler.py render > /tmp/hostingservice-units.json
+      - run: npx --yes skills@1.5.24 add . --list
+  gitea-recovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Gitea repository and database restore drill
+        run: sudo python3 tests/gitea_e2e.py

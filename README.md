@@ -2,6 +2,14 @@
 
 在自己的 Linux VPS 上按需启动个人服务。使用 Docker Compose，配置和数据留在各台服务器上，GitHub 只保存部署方式。
 
+希望 agent 带着完成配置与验收，可安装本仓库的部署 skill：
+
+```bash
+npx skills add git@github.com:inkfin/HostingService.git --skill hostingservice-deploy --agent codex --global
+```
+
+然后向 agent 说明目标 SSH 主机并要求使用 `hostingservice-deploy`。安装本身不启动服务；agent 会引导域名、账号、存储凭据、备份与定时任务，并验证实际使用和恢复。详见[部署 walkthrough](docs/deployment.md)、[开发与验收标准](docs/development.md)。
+
 ## 服务
 
 | 选项 | 服务 | 默认入口 |
@@ -122,11 +130,20 @@ hysteria client -c hysteria-client.yaml
 ./hosting down                    # 停止容器，保留 data/ 和 runtime/
 ./hosting up
 ./hosting backup                  # 短暂停服，打包后恢复原先运行的服务
+./hosting backup --remote         # 配好对象存储后，加密上传备份
+./hosting backup --remote --keep-stopped  # 换机用：上传后旧服务保持停止
 ```
 
-备份包括 `.env`、`runtime/`、`data/`、网站和 Compose 文件，不包括 `backups/` 自身。读取容器数据可能需要 root 权限，在 Linux 系统 Docker 下可用 `sudo ./hosting backup`。备份失败会删除不完整归档并尝试恢复运行中的服务。备份含私钥与密码，务必复制到其他机器并妥善保存。
+备份包括 `.env`、`runtime/`、`data/`、网站、Compose 文件及对应启动脚本，不包括 `backups/` 自身。会读取检查归档并生成 `.sha256` 校验文件。读取容器数据可能需要 root 权限，在 Linux 系统 Docker 下可用 `sudo ./hosting backup`。备份失败会删除不完整归档并尝试恢复运行中的服务。普通备份会恢复服务后再上传；迁移模式成功打包后保持停机，即使随后上传失败也不会重启旧服务。
 
-恢复时先在目标 VPS 克隆本仓库并停止已有容器，把归档解压到仓库根目录，保留所有者及权限，例如 `sudo tar -xzpf /安全路径/备份.tar.gz -C "$PWD"`，再执行 `./hosting check && ./hosting up`。这会覆盖同名配置与数据；请先备份目标机。换 IP、域名、CPU 架构后应检查 `.env`、Caddyfile 和代理客户端配置。
+本地归档含密码和私钥且未加密；`--remote` 使用 restic 加密后再上传对象存储。不要将归档提交到 GitHub。配置成功后用 `./hosting schedule install` 安装 VPS 定时器；当前不会自动删除历史备份。
+
+Gitea 备份增加停服后的 SQLite 完整性、Git 仓库完整性和存储覆盖检查。默认每天 03:30 异地备份、每小时检查新鲜度、每周检查远端仓库。部署前需先验证对象存储、告警与恢复，详见[定时备份运维](docs/operations.md)。
+
+恢复到新 VPS 时，先下载并校验归档，再解压到没有业务数据的目标仓库，保留数字 UID/GID 及权限。检查地址和域名后启动，避免旧新两台同时接收写入。
+
+- [对象存储配置、加密上传与云端恢复](docs/object-storage.md)
+- [Docker 存储基础、数据清单、下载到电脑与换机迁移](docs/storage-and-migration.md)
 
 镜像使用明确版本标签，不自动更新。升级前先备份，再修改 `compose.yaml` 的版本，阅读上游迁移说明，执行 `./hosting compose pull && ./hosting up`。标签仍可由上游重新发布，严格复现可进一步固定镜像 digest。
 
@@ -143,7 +160,7 @@ python3 -m unittest discover -s tests -v
 bash -n hosting
 ```
 
-测试覆盖重复初始化、凭据文件权限、订阅转义、证书指纹、ARM 拒绝 TeamSpeak、备份失败恢复及全部 Compose 服务的端口绑定。GitHub Actions 会执行这些检查。配置测试不代表目标 VPS 网络或容器运行验证，首次部署还需查看日志并实际连接。
+测试覆盖初始化、凭据权限、代理配置、服务架构、备份失败恢复、迁移停机、数据库归档恢复、restic 加密备份恢复及 Compose 端口绑定。restic 集成测试需要本机安装 restic；GitHub Actions 会安装并运行。测试不代表目标 VPS 或实际对象存储已验证，首次部署还需查看日志并实际连接。
 
 - [Docker Compose](https://docs.docker.com/compose/)
 - [Caddy 自动 HTTPS](https://caddyserver.com/docs/automatic-https)

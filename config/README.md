@@ -9,3 +9,7 @@
 已有机器不要重新初始化。增删 `.env` 的 `COMPOSE_PROFILES` 后执行 `./hosting up`。
 添加 china / overseas 模式前，先使用 `./hosting proxy-init china` 或 `./hosting proxy-init overseas` 生成配置。
 停用服务前执行 `./hosting compose stop 服务名`，再删除 profile；不会自动删除数据。
+
+对象存储模板为 `config/restic.example.json`，实际凭据放在 `runtime/restic.json`，加密密码放在 `runtime/restic-password`。两者权限设为 600，密码必须另存密码管理器。详见[对象存储备份](../docs/object-storage.md)。
+
+新增服务的数据挂载放到 `data/服务名/` 才会被当前备份覆盖；另加的 named volume、外部目录或远程数据库需要单独设计备份。
